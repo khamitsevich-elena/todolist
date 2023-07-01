@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <style>
+        * {
+    font-family: sans-serif;
+}
+.modal {
+    display:none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, .3);
+    cursor: pointer;
+}
+
+.popap {
+    position: absolute;
+    border: 1px solid rgba(0, 0, 0, .5);
+    width: 300px;
+    height: 250px;
+    background: #fff;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    cursor: default;
+    border-radius: 3px;
+}
+
+.popap-head {
+    position: relative;
+    height: 25px;
+}
+
+.popap-main {
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.popap-form {
+    margin-bottom: 20px;
+}
+
+.popap-main label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.popap-main label span {
+    font: 12px sans-serif;
+    display: block;
+}
+
+.popap-main label input {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.popap-btn {
+    text-align: right;
+}
+
+.btn {
+    display: inline-block;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    border-color: #333;
+}
+button.active{
+    background: #ccc;
+}
+.tab{
+    display: none;
+}
+.tab.active{
+    display: block;
+}
+table{
+    display:none;
+}
+.highlight{
+    color:red;
+}
+    </style>
+    <button class='add-user'>ADD</button>
+    <div class="modal">
+        <div class="popap">
+            <div class="popap-head">
+            <div class="popap-main">
+                <form class="popap-form">
+                    <label>
+                        <span>Название задания</span>
+                        <input type="text" name="name">
+                    </label>
+                    <label>
+                        <span>Описание задания</span>
+                        <input type="text" name="description">
+                    </label>
+                    <label>
+                        <span>Приоритет</span>
+                        <select class="select">
+                            <option value='Триальное'>Триальное</option>
+                            <option value ='Бессрочное' selected>Бессрочное</option>
+                            <option value ='Срочное'>Срочное</option>
+                          </select>
+                    </label>
+                </form>
+                <div class="popap-btn">
+                    <div class="btn close">close</div>
+                    <div class="btn ok">add</div>
+                    <div class="btn ok1">edit</div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+   
+    <div class="button">
+    <button class="task" class="active">Текущие задачи</button>
+    <button class="task">Выполненные задачи</button>
+    <button class="task">Удаленные задачи</button>
+    </div>
+    <div class="content">
+        <div class="tab">
+            <table border="1" cellpadding="0">
+            <thead>
+              <tr>
+                <th>Задание</th>
+                <th>Описание</th>
+                <th>Срочность</th>
+              </tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+          </table></div>
+        <div class="tab"><table border="1" cellpadding="0">
+                <thead>
+                  <tr>
+                    <th>Задание</th>
+                    <th>Описание</th>
+                    <th>Срочность</th>
+                  </tr>
+                </thead>
+                <tbody  class="tbody1"></tbody>
+              </table></div>
+        <div class="tab"><table border="1" cellpadding="0">
+                <thead>
+                  <tr>
+                    <th>Задание</th>
+                    <th>Описание</th>
+                    <th>Срочность</th>
+                  </tr>
+                </thead>
+                <tbody class="tbody2"></tbody>
+              </table></div>
+    </div>
+    <script>
+        let data =[];
+        let dataDone=[];
+        let dataDelete=[];
+
+        function ls(){
+        const setItem = data => {
+            localStorage.setItem('a', JSON.stringify(data));
+        }
+        if(localStorage.getItem('a')){
+            data = JSON.parse(localStorage.getItem('a'));
+        } else {
+            setItem(data);
+        }
+        return {setItem}
+    };
+        function ls1(){
+            const setItem1 = dataDone => {
+                localStorage.setItem('b', JSON.stringify(dataDone));
+            }
+            if(localStorage.getItem('b')){
+                dataDone = JSON.parse(localStorage.getItem('b'));
+            } else {
+                setItem1(dataDone);
+            }
+            return {setItem1}
+        };
+        function ls2(){
+            const setItem2 = dataDelete => {
+                localStorage.setItem('c', JSON.stringify(dataDelete));
+            }
+            if(localStorage.getItem('c')){
+                dataDelete = JSON.parse(localStorage.getItem('c'));
+            } else {
+                setItem2(dataDelete);
+            }
+            return {setItem2}
+        };
+
+    let localS = ls();
+    let localS1 = ls1();
+    let localS2 = ls2();
+    localS1.setItem1(dataDone);
+    localS2.setItem2(dataDelete);
+
+    const localTable = (function() {
+        let tbody = document.querySelector('.tbody');
+        let tbody1 = document.querySelector('.tbody1');
+        let tbody2 = document.querySelector('.tbody2');
+        let table = document.querySelectorAll('table');
+
+        let createTable = mass => {
+            tbody.innerHTML = '';
+            for (let el of mass) {
+                let tr = document.createElement('tr');
+                tr.classList.add('row');
+                tr.innerHTML = `<td>${el.name}</td>
+            <td>${el.description}</td>
+            <td>${el.urgency}</td>`
+                tbody.append(tr);
+                let edit = document.createElement('button');
+                edit.value = 'Редактировать';
+                edit.innerHTML = 'Редактировать';
+                edit.classList.add('edit');
+                tr.append(edit);
+                let done = document.createElement('button');
+                done.value = 'Выполнено';
+                done.innerHTML = 'Выполнено';
+                done.classList.add('done');
+                tr.append(done);
+                let delet = document.createElement('button');
+                delet.value = 'Удалить';
+                delet.innerHTML = 'Удалить';
+                delet.classList.add('delet');
+                tr.append(delet);
+            }
+            if (tbody.innerHTML != '') {
+                table[0].style.display = 'block';
+            }
+        }
+            let createTableDone = mass => {
+                tbody1.innerHTML = '';
+                for(let el of mass){
+                    let tr = document.createElement('tr');
+                    tr.classList.add('row');
+                    tr.innerHTML = `<td>${el.name}</td>
+            <td>${el.description}</td>
+            <td>${el.urgency}</td>`
+                    tbody1.append(tr);
+                    let restore = document.createElement('button');
+                    restore.value = 'Восстановить';
+                    restore.innerHTML='Восстановить';
+                    restore.classList.add('restoreDone');
+                    tr.append(restore);
+                    let delet = document.createElement('button');
+                    delet.value = 'Удалить';
+                    delet.innerHTML='Удалить';
+                    delet.classList.add('deletDone');
+                    tr.append(delet);
+                }
+                if(tbody1.innerHTML!=''){
+                    table[1].style.display = 'block';
+                }
+        }
+        let createTableDelete = mass => {
+            tbody2.innerHTML = '';
+            for(let el of mass){
+                let tr = document.createElement('tr');
+                tr.classList.add('row');
+                tr.innerHTML = `<td>${el.name}</td>
+            <td>${el.description}</td>
+            <td>${el.urgency}</td>`
+                tbody2.append(tr);
+                let restore = document.createElement('button');
+                restore.value = 'Восстановить';
+                restore.innerHTML='Восстановить';
+                restore.classList.add('restore');
+                tr.append(restore);
+                let delet = document.createElement('button');
+                delet.value = 'Удалить';
+                delet.innerHTML='Удалить насовсем';
+                delet.classList.add('deletforever');
+                tr.append(delet);
+            }
+            if(tbody2.innerHTML!=''){
+                table[2].style.display = 'block';
+            }
+        }
+        return {
+            create: createTable,
+            createDone: createTableDone,
+            createDelete: createTableDelete
+        }
+    })();
+            let btn = document.querySelectorAll('button.task');
+            let content = document.querySelectorAll('.tab');
+            let index = window.location.hash.split('-')[window.location.hash.split('-').length - 1];
+
+            if(index){
+                getBtnActive(index - 1);
+            }
+
+            function getBtnActive(index){
+                for(let button of btn){
+                    button.classList.remove('active');
+                }
+                for(let el of content){
+                    el.classList.remove('active');
+                }
+                btn[index].classList.add('active');
+                content[index].classList.add('active');
+                window.location.hash = `tab-${index + 1}`;
+            }
+
+            btn.forEach((item, index) => {
+                item.addEventListener('click', function(){
+                    getBtnActive(index);
+                })
+            })
+
+        let select = document.querySelector('.select');
+
+        const modal = (function(){
+
+        let modal = document.querySelector('.modal');
+
+        const closeModal = () => {
+            let input = document.querySelectorAll('input');
+            modal.style.display = 'none';
+            for(let field of input){
+                field.value = '';
+                field.style.borderColor ='';
+            }
+            document.querySelector('.ok1').style.display = 'flex';
+        }
+        const openModal = () => {
+            modal.style.display = 'block';
+            document.querySelector('.ok1').style.display = 'none';
+        }
+        const validation = () => {
+            let input = document.querySelectorAll('input');
+            let cur = 0;
+            let userData = {};
+            for(let field of input){
+                userData[field.name] = field.value;
+                if(field.value === ''){
+                    field.classList.add('error');
+                    field.style.borderColor ='red';
+                } else {
+                    field.style.borderColor ='';
+                    field.classList.remove('error');
+                    cur += 1;
+                }
+                userData.urgency = select.value;
+            }
+
+            if(cur === input.length){
+                data.push(userData);
+                localTable.create(data);
+                closeModal();
+            }
+            localS.setItem(data);
+        }
+        return {
+            open: openModal,
+            close: closeModal,
+            add: validation
+        }
+    })();
+        localTable.createDone(dataDone);
+        localTable.createDelete(dataDelete);
+        localTable.create(data);
+
+            let x;
+            const edit1 = (function() {
+                let edit = document.querySelectorAll('.edit');
+                let modal = document.querySelector('.modal');
+                const closeEdit = () => {
+                    let input = document.querySelectorAll('input');
+                    modal.style.display = 'none';
+                    for(let field of input){
+                        field.value = '';
+                        field.style.borderColor ='';
+                    }
+                }
+                const openEdit = () => {
+                    modal.style.display = 'block';
+                    let input = document.querySelectorAll('input');
+                    let {name, description, urgency} = data[x];
+                    input[0].value = name;
+                    input[1].value = description;
+                    select.value = urgency;
+                }
+                const validation1 = () => {
+                        let input = document.querySelectorAll('input');
+                        let cur = 0;
+                        let userData = {};
+                        for (let field of input) {
+                            userData[field.name] = field.value;
+                            if (field.value === '') {
+                                field.classList.add('error');
+                                field.style.borderColor = 'red';
+                            } else {
+                                field.style.borderColor = '';
+                                field.classList.remove('error');
+                                cur += 1;
+                            }
+                            userData.urgency = select.value;
+                        }
+
+                        if (cur === input.length) {
+                            data[x]=userData;
+                            localTable.create(data);
+                            console.log(userData);
+                            closeEdit();
+                        }
+                        localS.setItem(data);
+                    }
+                return {
+                    open: openEdit,
+                    edit2: validation1
+                }
+            })();
+
+        document.onclick = function(event) {
+            let table = document.querySelectorAll('table');
+            let target = event.target;
+            if (target.classList.contains('edit')) {
+                let edit = document.querySelectorAll('.edit');
+                for (let el = 0; el <= edit.length; el++) {
+                    if (target == edit[el]) {
+                        x = el;
+                        edit1.open();
+                    }
+                }
+            }
+            if (target.classList.contains('delet')) {
+                let delite = document.querySelectorAll('.delet');
+                for (let el = 0; el <= delite.length; el++) {
+                    if (target == delite[el]) {
+                        dataDelete.push(data[el]);
+                        localS2.setItem2(dataDelete);
+                        localTable.createDelete(dataDelete);
+                        data.splice(el, 1);
+                        localS.setItem(data);
+                        table[0].style.display = 'none';
+                        localTable.create(data);
+                    }
+                }
+            }
+            if (target.classList.contains('deletforever')) {
+                let foreverDel = document.querySelectorAll('.deletforever');
+                for (let el = 0; el <= foreverDel.length; el++) {
+                    if (target == foreverDel[el]) {
+                        dataDelete.splice(el, 1);
+                        localS2.setItem2(dataDelete);
+                        table[2].style.display = 'none';
+                        localTable.createDelete(dataDelete);
+                    }
+                }
+            }
+            if (target.classList.contains('deletDone')) {
+                let deletDone = document.querySelectorAll('.deletDone');
+                for (let el = 0; el <= deletDone.length; el++) {
+                    if (target == deletDone[el]) {
+                        dataDelete.push(dataDone[el]);
+                        localS2.setItem2(dataDelete);
+                        localTable.createDelete(dataDelete);
+                        dataDone.splice(el, 1);
+                        localS1.setItem1(dataDone);
+                        table[1].style.display = 'none';
+                        localTable.createDone(dataDone);
+                     }
+                }
+            }
+            if (target.classList.contains('done')) {
+                let done = document.querySelectorAll('.done');
+                for (let el = 0; el <= done.length; el++) {
+                    if (target == done[el]) {
+                        dataDone.push(data[el]);
+                        localS1.setItem1(dataDone);
+                        localTable.createDone(dataDone);
+                        data.splice(el, 1);
+                        localS.setItem(data);
+                        table[0].style.display = 'none';
+                        localTable.create(data);
+                    }
+                }
+            }
+            if (target.classList.contains('restore')) {
+                let restore = document.querySelectorAll('.restore');
+                for (let el = 0; el <= restore.length; el++) {
+                    if (target == restore[el]) {
+                        data.push(dataDelete[el]);
+                        localS.setItem(data);
+                        localTable.create(data);
+                        dataDelete.splice(el, 1);
+                        localS2.setItem2(dataDelete);
+                        table[2].style.display = 'none';
+                        localTable.createDelete(dataDelete);
+                    }
+                }
+            }
+            if (target.classList.contains('restoreDone')) {
+                let restoreDone = document.querySelectorAll('.restoreDone');
+                for (let el = 0; el <= restoreDone.length; el++) {
+                    if (target == restoreDone[el]) {
+                        data.push(dataDone[el]);
+                        localS.setItem(data);
+                        localTable.create(data);
+                        dataDone.splice(el, 1);
+                        localS1.setItem1(dataDone);
+                        table[1].style.display = 'none';
+                        localTable.createDone(dataDone);
+                    }
+                }
+            }
+        }
+
+        document.querySelector('.ok1').addEventListener('click', edit1.edit2);
+        document.querySelector('.add-user').addEventListener('click', modal.open);
+        document.querySelector('.ok').addEventListener('click', modal.add);
+        document.querySelector('.close').addEventListener('click', modal.close);
+
+</script>
+</body>
+</html>
